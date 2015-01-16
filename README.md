@@ -47,8 +47,13 @@ printf '\n%s\n' "output" >>.gitignore
 
 Would it be useful to supply a script to do these steps for you? (eg one that is available as a curl one-liner)? Please let us know.
 
+## Global Variables
+
+The global array variable `build_nonOptions` contains all non-options (ie things after switches / `--`). The [shellfire] build uses to decide which components to build.
+
 ## Notes
-Please note that the symlink `build.shellfire.functions` _intentionally_ appears broken.
+
+* Please note that the symlink `build.shellfire.functions` _intentionally_ appears broken.
 
 
 ## Importing

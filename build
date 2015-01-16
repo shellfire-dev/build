@@ -133,6 +133,17 @@ _program_commandLine_processOptionWithArgument()
 	esac
 }
 
+_program_commandLine_handleNonOptions()
+{
+	core_variable_array_initialise build_nonOptions
+	
+	local nonOption
+	for nonOption in "$@"
+	do
+		core_variable_array_append build_nonOptions "$nonOption"
+	done
+}
+
 _program_commandLine_validate()
 {
 	if core_variable_isSet build_relativePath; then
