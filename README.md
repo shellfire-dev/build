@@ -21,8 +21,7 @@ Do the following from the top-level folder of your git repository:-
 # Add this as a submodule (Importing)
 mkdir -m 0755 -p lib/shellfire
 cd lib/shellfire
-git submodule add "https://github.com/shellfire-dev/build.git"
-git submodule update --init
+git submodule add --branch master "https://github.com/shellfire-dev/build.git"
 cd -
 
 # Symlink the build script
@@ -39,14 +38,16 @@ build()
 }
 EOF
 
+# Ignore output folder created by `build_prepareOutput`
+printf '\n%s\n' "output" >>.gitignore
+
 # Run the build!
 ./build
-
-# Build scripts are regular shellfire applications
-./build --help
 ```
 
-Of course, you could add functions (just prefix them so they don't collide with the `build` namespace - `_program_` is appropriate), even add additional [shellfire] modules - anything a [shellfire] application can do, build scripts can do. And if you come up with something good, please consider pushing a pull request.
+Build scripts are regular shellfire applications; for example, run `./build --help` to see a list of options. Consequently,  you could add functions (just prefix them so they don't collide with the `build` namespace - `_program` is appropriate), even add additional [shellfire] modules - anything a [shellfire] application can do, build scripts can do. And if you come up with something good, please consider pushing a pull request.
+
+When adding functions, you can them either to `build.shellfire` or even create your own modules in `lib/shellfire`, and use `core_usesIn module_name` to import it.
 
 ### Build with [swaddle] Tutorial
 
@@ -58,7 +59,20 @@ The [build] module contains a wrapper around [fatten] and [swaddle]. Setting it 
 * Adjust the build rules
 * Add swaddling
 * Add a `README.md` and `COPYRIGHT` file, if not already present.
+* build!
 
+For the purposes of this tutorial, we'll assume you've set up the following environment variables:-
+
+```bash
+# eg shellfire-dev, raphaelcohn, etc
+mygithubuser=MY_GITHUB_USER_OR_ORGANIZATION
+
+# eg For the overdrive tutorial, overdrive.
+myproject=MY_PROJECT_NAME
+
+# eg For the overdrive tutorial, overdrive.
+myprogram=MY_PROGRAM_TO_FATTEN
+```
 
 #### Import [fatten]
 
@@ -75,6 +89,7 @@ mkdir -m 0755 -p tools
 cd tools
 git submodule add --branch master "https://github.com/shellfire-dev/fatten.git"
 git submodule init
+git submodule update --init --recursive
 cd -
 ```
 
@@ -95,6 +110,7 @@ Similarly to [fatten], for [swaddle], there are three ways to import it. Again, 
 cd tools
 git submodule add --branch master "https://github.com/raphaelcohn/swaddle.git"
 git submodule init
+git submodule update --init --recursive
 cd -
 ```
 
@@ -109,16 +125,9 @@ cd -
 
 #### Adjust the build rules
 
-Do the following from the top-level folder of your git repository:-
-
+Do the following from the top-level folder of your git repository (make sure you have set the environment variables first):-
 
 ```bash
-# Set these. For the overdrive tutorial, they'd be 'overdrive' and 'overdrive'
-mygithubuser=MY_GITHUB_USER_OR_ORGANIZATION
-myproject=MY_PROJECT_NAME
-myprogram=MY_PROGRAM_TO_FATTEN
-
-# Overwrite your build rules
 cat >build.shellfire <<-EOF
 build()
 {
@@ -129,36 +138,15 @@ build()
 EOF
 ```
 
+#### Add swaddling
 
-
-
-
-
-
-These steps assume you have a `README.md` and `COPYRIGHT` file (in [Machine-readable Debian format](https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/)):-
-
-
-
-
-
-
-
-
-
-
-
-
-
-These steps assume you have a `README.md` and `COPYRIGHT` file (in [Machine-readable Debian format](https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/)):-
-## Overview
-
+swaddling is the name [swaddle] gives to the source control-friendly configuration of files and folders that create packages, repositories and web sites hosting your released code. Let's create some (make sure you have set the environment variables first):-
 
 ```bash
-# Ignore output folder created by `build_prepareOutput()`
-printf '\n%s\n' "output" >>.gitignore
+# If a folder is present, that package kind is built
+mkdir -m 0755 -p swaddling/"$myproject"/{tar,deb,skeleton}/all
 
-# Create some swaddling for your project
-mkdir -m 0755 -p swaddling/"$myproject"/{tar,deb,skeleton/all}
+## Useful configuration
 cat >swaddling/swaddling.conf <<-EOF
     configure swaddle host_base_url 'https://${mygithubuser}.github.io/${myproject}/download'
     configure swaddle bugs_url 'https://github.com/$mygithubuser/${myproject}/issues'
@@ -168,29 +156,109 @@ cat >swaddling/swaddling.conf <<-EOF
     configure swaddle sign no
     configure swaddle vendor ${mygithubuser}
 EOF
+
+## Package descriptions and summaries
 cat >swaddling/"$myproject"/package.conf <<-EOF
     configure swaddle_package description \
-    "Overdrive is a tutorial application
-    The first line is used as a summary."
+    "${myproject} is a tutorial application
+    The first line is used as a summary by RPM."
 EOF
+
+## Debian packages depending on dash, compressed using gzip
 cat >swaddling/"$myproject"/deb/deb.conf <<-EOF
     configure swaddle_deb depends dash
+    configure swaddle_deb depends coreutils
     configure swaddle_deb compression gzip
 EOF
+
+## gzip, xz compressed tarballs
 cat >swaddling/"$myproject"/tar/tar.conf <<-EOF
     configure swaddle_tar compressions gzip
     configure swaddle_tar compressions xz
 EOF
 
-## Make sure we don't check stuff in
-printf '\n%s\n' 'body' >swaddling/overdrive/.gitignore
-## 
+# gitignore s
 
-# Use the help to see what build does
-./build --help
+## Make sure empty folders get checked in
+touch swaddling/"$myproject"/{tar,deb,skeleton}/all/.gitignore
+
+## build also creates a symlink at `swaddling/$myproject/body`, so let's add that to `.gitignore`:-
+printf '\n%s\n' 'body' >swaddling/"$myproject"/.gitignore
 ```
 
-Would it be useful to supply a script to do these steps for you? (eg one that is available as a curl one-liner)? Please let us know.
+
+#### Add a `README.md` and `COPYRIGHT` file, if not already present.
+
+[swaddle] automatically converts `README.md` files into a man page for your package. Let's make sure at least an empty one exists:-
+
+```bash
+touch README.md
+```
+
+Both [fatten] and [swaddle] use a `COPYRIGHT` file, in [Machine-readable Debian format](https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/), to embed licensing and COPYRIGHT information in your package (eg RPM licence fields and documentation database, Debian documentation, etc). These are much more precise than the usual mix of a `LICENSE` file and copyright headers in source files (and much easier to maintain). As an example, why not modify ours:-
+
+```bash
+cat >COPYRIGHT <<EOF
+Format: http://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
+Comment: Distribution Compilation Copyright and License
+Copyright: Copyright © 2014-2015, Raphael Cohn <raphael.cohn@stormmq.com>
+License: MIT
+ The MIT License (MIT)
+ .
+ Copyright © 2014-2015, Raphael Cohn <raphael.cohn@stormmq.com>
+ .
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+
+Files: *
+Copyright: Copyright © 2014-2015, Raphael Cohn <raphael.cohn@stormmq.com>
+License: MIT
+ The MIT License (MIT)
+ .
+ Copyright © 2014-2015, Raphael Cohn <raphael.cohn@stormmq.com>
+ .
+ Permission is hereby granted, free of charge, to any person obtaining a copy
+ of this software and associated documentation files (the "Software"), to deal
+ in the Software without restriction, including without limitation the rights
+ to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ copies of the Software, and to permit persons to whom the Software is
+ furnished to do so, subject to the following conditions:
+ .
+ The above copyright notice and this permission notice shall be included in all
+ copies or substantial portions of the Software.
+ .
+ THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ SOFTWARE.
+EOF
+```
+
+#### build!
+
+Right, now just build and see what happens:-
+
+```bash
+./build
+```
 
 ## Global Variables
 
