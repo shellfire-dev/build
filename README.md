@@ -64,7 +64,7 @@ The [build] module contains a wrapper around [fatten] and [swaddle]. Setting it 
 
 There are three ways to import [fatten]:-
 
-* By downloading a release, and adding it as an executable at `tools/fatten/fatten`
+* By downloading a [executable release](https://github.com/shellfire-dev/fatten/releases), and adding it as an executable at `tools/fatten/fatten`
 * By relying on your package manager
 * By importing it as a submodule
 
@@ -73,8 +73,17 @@ Since releases of fatten have [shellfire]'s automatic dependency installation di
 ```bash
 mkdir -m 0755 -p tools
 cd tools
-git submodule add "https://github.com/shellfire-dev/fatten.git"
-git submodule update --init --recursive
+git submodule add --branch master "https://github.com/shellfire-dev/fatten.git"
+git submodule init
+cd -
+```
+
+This tracks [fatten]'s master branch. To fix to a particular release of [fatten], such as `release_2015.0116.1415-1`:-
+
+```bash
+# Assuming the steps above have been taken
+cd tools/fatten
+git checkout release_2015.0116.1415-1
 cd -
 ```
 
@@ -84,9 +93,17 @@ Similarly to [fatten], for [swaddle], there are three ways to import it. Again, 
 
 ```bash
 cd tools
-# Note the differrent Git URL
-git submodule add "https://github.com/raphaelcohn/swaddle.git"
-git submodule update --init --recursive
+git submodule add --branch master "https://github.com/raphaelcohn/swaddle.git"
+git submodule init
+cd -
+```
+
+This tracks [swaddle]'s master branch. To fix to a particular release of [swaddle], such as `release_2015.0117.1737-2`:-
+
+```bash
+# Assuming the steps above have been taken
+cd tools/swaddle
+git checkout release_2015.0117.1737-2
 cd -
 ```
 
