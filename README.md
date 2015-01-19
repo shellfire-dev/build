@@ -20,8 +20,8 @@ Do the following from the top-level folder of your git repository:-
 mkdir -p lib/shellfire
 cd lib/shellfire
 git submodule add "https://github.com/shellfire-dev/build.git"
+git submodule update --init
 cd -
-git submodule init --update
 
 # Symlink the build script
 ln -s lib/shellfire/build/build
@@ -52,7 +52,7 @@ Would it be useful to supply a script to do these steps for you? (eg one that is
 
 ## Global Variables
 
-The global array variable `build_nonOptions` contains all non-options (ie things after switches / `--`). The [shellfire] build uses to decide which components to build.
+The global array variable `build_nonOptions` contains all non-options (ie things after switches / `--`). The [shellfire] build uses this variable to decide which components to build.
 
 ## Notes
 
