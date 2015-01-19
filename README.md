@@ -70,7 +70,7 @@ cd -
 git submodule init --update
 ```
 
-You may need to change the url `https://github.com/shellfire-dev/build.git"` above if using a fork.
+You may need to change the url `https://github.com/shellfire-dev/build.git` above if using a fork.
 
 You will also need to add paths - include the module [paths.d].
 
