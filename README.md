@@ -15,6 +15,9 @@ Code may change as usage expands.
 Do the following from the top-level folder of your git repository:-
 
 ```bash
+# Set these. For the overdrive tutorial, they'd be 'overdrive' and 'overdrive'
+myproject=MY_PROJECT_NAME
+myprogram=MY_PROGRAM_TO_FATTEN
 
 # Add this as a submodule (Importing)
 mkdir -p lib/shellfire
@@ -34,7 +37,7 @@ build()
 	build_travis_ci_ensureGnupgKeyringExists
 	build_prepareOutput
 	
-	build_fattenAndSwaddle 'myproject' "$build_relativePath" paths.d-helper
+	build_fattenAndSwaddle '$myproject' "\$build_relativePath" '$myprogram'
 }
 EOF
 
