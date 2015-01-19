@@ -12,15 +12,14 @@ Code may change as usage expands.
 
 ## Overview
 
+### Quick Tutorial
+
 Do the following from the top-level folder of your git repository:-
 
 ```bash
-# Set these. For the overdrive tutorial, they'd be 'overdrive' and 'overdrive'
-myproject=MY_PROJECT_NAME
-myprogram=MY_PROGRAM_TO_FATTEN
 
 # Add this as a submodule (Importing)
-mkdir -p lib/shellfire
+mkdir -m 0755 -p lib/shellfire
 cd lib/shellfire
 git submodule add "https://github.com/shellfire-dev/build.git"
 git submodule update --init
@@ -29,25 +28,148 @@ cd -
 # Symlink the build script
 ln -s lib/shellfire/build/build
 
-# Create build rules
+# Create some build rules
 cat >build.shellfire <<-EOF
 build()
 {
-	build_travis_ci_updateGitSubmodulesRecursively
-	build_travis_ci_ensureGnupgKeyringExists
+	# Create a folder called 'output'
 	build_prepareOutput
 	
-	build_fattenAndSwaddle '$myproject' "\$build_relativePath" '$myprogram'
+	core_message NOTICE "Hello World"
 }
 EOF
 
+# Run the build!
+./build
+
+# Build scripts are regular shellfire applications
+./build --help
+```
+
+Of course, you could add functions (just prefix them so they don't collide with the `build` namespace - `_program_` is appropriate), even add additional [shellfire] modules - anything a [shellfire] application can do, build scripts can do. And if you come up with something good, please consider pushing a pull request.
+
+### Build with [swaddle] Tutorial
+
+The [build] module contains a wrapper around [fatten] and [swaddle]. Setting it up requires us to:-
+
+* Completed the [Quick Tutorial](#quick-tutorial)
+* Import [fatten]
+* Import [swaddle]
+* Adjust the build rules
+* Add swaddling
+* Add a `README.md` and `COPYRIGHT` file, if not already present.
+
+
+#### Import [fatten]
+
+There are three ways to import [fatten]:-
+
+* By downloading a release, and adding it as an executable at `tools/fatten/fatten`
+* By relying on your package manager
+* By importing it as a submodule
+
+Since releases of fatten have [shellfire]'s automatic dependency installation disabled, it is preferable for this tutorial to use the submodule. This ensures the build system installs what it needs on first run. Let's add it:-
+
+```bash
+mkdir -m 0755 -p tools
+cd tools
+git submodule add "https://github.com/shellfire-dev/fatten.git"
+git submodule update --init --recursive
+cd -
+```
+
+#### Import [swaddle]
+
+Similarly to [fatten], for [swaddle], there are three ways to import it. Again, we'll add it as a submdoule:-
+
+```bash
+cd tools
+# Note the differrent Git URL
+git submodule add "https://github.com/raphaelcohn/swaddle.git"
+git submodule update --init --recursive
+cd -
+```
+
+#### Adjust the build rules
+
+Do the following from the top-level folder of your git repository:-
+
+
+```bash
+# Set these. For the overdrive tutorial, they'd be 'overdrive' and 'overdrive'
+mygithubuser=MY_GITHUB_USER_OR_ORGANIZATION
+myproject=MY_PROJECT_NAME
+myprogram=MY_PROGRAM_TO_FATTEN
+
+# Overwrite your build rules
+cat >build.shellfire <<-EOF
+build()
+{
+	build_prepareOutput
+	
+	build_fattenAndSwaddle '${myproject}' "\$build_relativePath" '${myprogram}'
+}
+EOF
+```
+
+
+
+
+
+
+
+These steps assume you have a `README.md` and `COPYRIGHT` file (in [Machine-readable Debian format](https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/)):-
+
+
+
+
+
+
+
+
+
+
+
+
+
+These steps assume you have a `README.md` and `COPYRIGHT` file (in [Machine-readable Debian format](https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/)):-
+## Overview
+
+
+```bash
 # Ignore output folder created by `build_prepareOutput()`
 printf '\n%s\n' "output" >>.gitignore
 
-# Now build your application with `./build`
-./build
+# Create some swaddling for your project
+mkdir -m 0755 -p swaddling/"$myproject"/{tar,deb,skeleton/all}
+cat >swaddling/swaddling.conf <<-EOF
+    configure swaddle host_base_url 'https://${mygithubuser}.github.io/${myproject}/download'
+    configure swaddle bugs_url 'https://github.com/$mygithubuser/${myproject}/issues'
+    configure swaddle maintainer_name 'Raphael Cohn'
+    configure swaddle maintainer_comment 'Package Signing Key'
+    configure swaddle maintainer_email 'raphael.cohn@stormmq.com'
+    configure swaddle sign no
+    configure swaddle vendor ${mygithubuser}
+EOF
+cat >swaddling/"$myproject"/package.conf <<-EOF
+    configure swaddle_package description \
+    "Overdrive is a tutorial application
+    The first line is used as a summary."
+EOF
+cat >swaddling/"$myproject"/deb/deb.conf <<-EOF
+    configure swaddle_deb depends dash
+    configure swaddle_deb compression gzip
+EOF
+cat >swaddling/"$myproject"/tar/tar.conf <<-EOF
+    configure swaddle_tar compressions gzip
+    configure swaddle_tar compressions xz
+EOF
 
-# Use the help to see what else you can do
+## Make sure we don't check stuff in
+printf '\n%s\n' 'body' >swaddling/overdrive/.gitignore
+## 
+
+# Use the help to see what build does
 ./build --help
 ```
 
