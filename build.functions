@@ -42,5 +42,5 @@ build_fattenAndSwaddle()
 	mkdir -m 0755 -p "$swaddledOutputPath"
 
 	"$build_fattenPath" --verbose $(core_init_verbosity) --force --repository-path "$repositoryPath" --output-path "$fattenedOutputPath" --bin-path "$build_binPath" --ignore-dependencies -- "$@"
-	"$build_swaddlePath" --verbose $(core_init_verbosity) --swaddling-path "$swaddlingPath" --output-path "$swaddledOutputPath" --publish-github -- "$groupName"
+	"$build_swaddlePath" --verbose $(core_init_verbosity) --swaddling-path "$swaddlingPath" --output-path "$swaddledOutputPath" --publish-github on --release-github on -- "$groupName"
 }
