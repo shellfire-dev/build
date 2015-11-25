@@ -28,5 +28,5 @@ build_travis_ci_updateGitSubmodulesRecursively()
 core_dependency_requires '*' mkdir
 build_travis_ci_ensureGnupgKeyringExists()
 {
-	build_travis_ci_do mkdir -m 0755 -p ~/.gnupg
+	build_travis_ci_do mkdir -m 0755 -p "$HOME"/.gnupg
 }
